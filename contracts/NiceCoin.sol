@@ -11,7 +11,7 @@ import './INiceCoin.sol';
 /// @title Nice coin
 /// @author @carlfarterson
 /// @notice Base erc20 contract for Nice coin ($NICE)
-contract NiceCoin is ERC20('Nice coin', 'NICE'), ERC20Burnable, Ownable, IMeTokens {
+contract NiceCoin is ERC20('Nice coin', 'NICE'), ERC20Burnable, Ownable, INiceCoin {
 
     /// @notice The EIP-712 typehash for the contract's domain
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
@@ -39,31 +39,29 @@ contract NiceCoin is ERC20('Nice coin', 'NICE'), ERC20Burnable, Ownable, IMeToke
     /// @notice A record of states for signing / validating signatures
     mapping (address => uint) public nonces;
 
-
     constructor() {
         _mint(msg.sender, 1000000000000 * 10**18); // 1 trillion NICE
         _moveDelegates(address(0), _delegates[_to], _amount);
     }
 
-
-    /// @inheritdoc IMeTokens
+    /// @inheritdoc INiceCoin
     function mint(address _to, uint256 _amount) public onlyOwner override {
         
         _mint(_to, _amount);
         _moveDelegates(address(0), _delegates[_to], _amount);
     }
     
-    /// @inheritdoc IMeTokens
+    /// @inheritdoc INiceCoin
     function delegates(address delegator) external view override returns (address) {
         return _delegates[delegator];
     }
 
-    /// @inheritdoc IMeTokens
+    /// @inheritdoc INiceCoin
     function delegate(address delegatee) external override {
         return _delegate(msg.sender, delegatee);
     }
 
-    /// @inheritdoc IMeTokens
+    /// @inheritdoc INiceCoin
     function delegateBySig(
         address delegatee,
         uint nonce,
@@ -101,13 +99,13 @@ contract NiceCoin is ERC20('Nice coin', 'NICE'), ERC20Burnable, Ownable, IMeToke
         );
 
         address signatory = ecrecover(digest, v, r, s);
-        require(signatory != address(0), "ME::delegateBySig: invalid signature");
-        require(nonce == nonces[signatory]++, "ME::delegateBySig: invalid nonce");
-        require(block.timestamp <= expiry, "ME::delegateBySig: signature expired");
+        require(signatory != address(0), "NICE::delegateBySig: invalid signature");
+        require(nonce == nonces[signatory]++, "NICE::delegateBySig: invalid nonce");
+        require(block.timestamp <= expiry, "NICE::delegateBySig: signature expired");
         return _delegate(signatory, delegatee);
     }
 
-    /// @inheritdoc IMeTokens
+    /// @inheritdoc INiceCoin
     function getCurrentVotes(address account)
         external
         view
@@ -118,14 +116,14 @@ contract NiceCoin is ERC20('Nice coin', 'NICE'), ERC20Burnable, Ownable, IMeToke
         return nCheckpoints > 0 ? checkpoints[account][nCheckpoints - 1].votes : 0;
     }
 
-    /// @inheritdoc IMeTokens
+    /// @inheritdoc INiceCoin
     function getPriorVotes(address account, uint blockNumber)
         external
         view
         override
         returns (uint256)
     {
-        require(blockNumber < block.number, "ME::getPriorVotes: not yet determined");
+        require(blockNumber < block.number, "NICE::getPriorVotes: not yet determined");
 
         uint32 nCheckpoints = numCheckpoints[account];
         if (nCheckpoints == 0) {
@@ -162,7 +160,7 @@ contract NiceCoin is ERC20('Nice coin', 'NICE'), ERC20Burnable, Ownable, IMeToke
         internal
     {
         address currentDelegate = _delegates[delegator];
-        uint256 delegatorBalance = balanceOf(delegator); // balance of underlying MEs (not scaled);
+        uint256 delegatorBalance = balanceOf(delegator); // balance of underlying NICEs (not scaled);
         _delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
@@ -198,7 +196,7 @@ contract NiceCoin is ERC20('Nice coin', 'NICE'), ERC20Burnable, Ownable, IMeToke
     )
         internal
     {
-        uint32 blockNumber = safe32(block.number, "ME::_writeCheckpoint: block number exceeds 32 bits");
+        uint32 blockNumber = safe32(block.number, "NICE::_writeCheckpoint: block number exceeds 32 bits");
 
         if (nCheckpoints > 0 && checkpoints[delegatee][nCheckpoints - 1].fromBlock == blockNumber) {
             checkpoints[delegatee][nCheckpoints - 1].votes = newVotes;

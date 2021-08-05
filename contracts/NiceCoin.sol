@@ -25,7 +25,7 @@ contract NiceCoin is ERC20('Nice coin', 'NICE'), ERC20Burnable, Ownable, INiceCo
         uint256 votes;
     }
 
-    /// @notice record of each accounts delegate
+    /// @dev record of each accounts delegate
     mapping (address => address) internal _delegates;
 
 
@@ -40,17 +40,11 @@ contract NiceCoin is ERC20('Nice coin', 'NICE'), ERC20Burnable, Ownable, INiceCo
     mapping (address => uint) public nonces;
 
     constructor() {
-        _mint(msg.sender, 1000000000000 * 10**18); // 1 trillion NICE
-        _moveDelegates(address(0), _delegates[_to], _amount);
+        uint256 amount = 1000000000000 * 10**18; /// 1 trillion NICE
+        _mint(msg.sender, amount); // 1 trillion NICE
+        _moveDelegates(address(0), _delegates[msg.sender], amount);
     }
 
-    /// @inheritdoc INiceCoin
-    function mint(address _to, uint256 _amount) public onlyOwner override {
-        
-        _mint(_to, _amount);
-        _moveDelegates(address(0), _delegates[_to], _amount);
-    }
-    
     /// @inheritdoc INiceCoin
     function delegates(address delegator) external view override returns (address) {
         return _delegates[delegator];

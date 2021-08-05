@@ -1,0 +1,2 @@
+# NICE coin
+## [Etherscan]()
